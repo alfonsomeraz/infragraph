@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git init:*)",
+      "Bash(chmod:*)",
+      "Bash(pip install:*)",
+      "Bash(docker compose:*)",
+      "Bash(alembic revision:*)",
+      "Bash(alembic upgrade:*)",
+      "Bash(python -m pytest:*)",
+      "Bash(pip show:*)",
+      "Bash(ruff check:*)",
+      "Bash(ruff format:*)",
+      "Bash(python3:*)",
+      "Bash(python -m venv:*)",
+      "Bash(make install:*)",
+      "Bash(/Users/alfonsomeraz/infragraph/backend/.venv/bin/pip install:*)",
+      "Bash(/Users/alfonsomeraz/infragraph/backend/.venv/bin/python:*)",
+      "Bash(.venv/bin/pip install:*)",
+      "Bash(/Users/alfonsomeraz/infragraph/backend/.venv/bin/pip show:*)",
+      "Bash(.venv/bin/python -m pytest:*)",
+      "Bash(make lint:*)",
+      "Bash(.venv/bin/ruff check:*)",
+      "Bash(make test-one:*)",
+      "Bash(make test:*)"
+    ]
+  }
+}

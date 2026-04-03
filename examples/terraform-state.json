@@ -1,0 +1,226 @@
+{
+  "format_version": "1.0",
+  "terraform_version": "1.7.0",
+  "values": {
+    "root_module": {
+      "resources": [],
+      "child_modules": [
+        {
+          "address": "module.network",
+          "resources": [
+            {
+              "address": "module.network.aws_vpc.main",
+              "type": "aws_vpc",
+              "name": "main",
+              "provider_name": "registry.terraform.io/hashicorp/aws",
+              "values": {
+                "id": "vpc-0abc123def456",
+                "cidr_block": "10.0.0.0/16",
+                "enable_dns_support": true,
+                "tags": { "Name": "main-vpc", "Environment": "production" }
+              }
+            },
+            {
+              "address": "module.network.aws_subnet.private",
+              "type": "aws_subnet",
+              "name": "private",
+              "provider_name": "registry.terraform.io/hashicorp/aws",
+              "values": {
+                "id": "subnet-0priv123",
+                "cidr_block": "10.0.1.0/24",
+                "vpc_id": "module.network.aws_vpc.main",
+                "availability_zone": "us-east-1a",
+                "tags": { "Name": "private-subnet" }
+              }
+            },
+            {
+              "address": "module.network.aws_subnet.public",
+              "type": "aws_subnet",
+              "name": "public",
+              "provider_name": "registry.terraform.io/hashicorp/aws",
+              "values": {
+                "id": "subnet-0pub456",
+                "cidr_block": "10.0.2.0/24",
+                "vpc_id": "module.network.aws_vpc.main",
+                "availability_zone": "us-east-1b",
+                "tags": { "Name": "public-subnet" }
+              }
+            },
+            {
+              "address": "module.network.aws_security_group.web",
+              "type": "aws_security_group",
+              "name": "web",
+              "provider_name": "registry.terraform.io/hashicorp/aws",
+              "values": {
+                "id": "sg-0web789",
+                "name": "web-sg",
+                "vpc_id": "module.network.aws_vpc.main",
+                "tags": { "Name": "web-sg" }
+              }
+            },
+            {
+              "address": "module.network.aws_security_group.db",
+              "type": "aws_security_group",
+              "name": "db",
+              "provider_name": "registry.terraform.io/hashicorp/aws",
+              "values": {
+                "id": "sg-0db012",
+                "name": "db-sg",
+                "vpc_id": "module.network.aws_vpc.main",
+                "tags": { "Name": "db-sg" }
+              }
+            }
+          ],
+          "child_modules": []
+        },
+        {
+          "address": "module.compute",
+          "resources": [
+            {
+              "address": "module.compute.aws_iam_role.instance_role",
+              "type": "aws_iam_role",
+              "name": "instance_role",
+              "provider_name": "registry.terraform.io/hashicorp/aws",
+              "values": {
+                "id": "web-instance-role",
+                "name": "web-instance-role",
+                "assume_role_policy": "{\"Version\":\"2012-10-17\"}",
+                "tags": { "Name": "web-instance-role" }
+              }
+            },
+            {
+              "address": "module.compute.aws_iam_instance_profile.web",
+              "type": "aws_iam_instance_profile",
+              "name": "web",
+              "provider_name": "registry.terraform.io/hashicorp/aws",
+              "values": {
+                "id": "web-profile",
+                "name": "web-profile",
+                "role": "module.compute.aws_iam_role.instance_role",
+                "tags": {}
+              }
+            },
+            {
+              "address": "module.compute.aws_instance.web",
+              "type": "aws_instance",
+              "name": "web",
+              "provider_name": "registry.terraform.io/hashicorp/aws",
+              "values": {
+                "id": "i-0web123abc",
+                "ami": "ami-0abcdef1234567890",
+                "instance_type": "t3.medium",
+                "subnet_id": "module.network.aws_subnet.private",
+                "vpc_security_group_ids": [
+                  "module.network.aws_security_group.web"
+                ],
+                "iam_instance_profile": "module.compute.aws_iam_instance_profile.web",
+                "tags": { "Name": "web-server" }
+              }
+            }
+          ],
+          "child_modules": []
+        },
+        {
+          "address": "module.data",
+          "resources": [
+            {
+              "address": "module.data.aws_kms_key.db_key",
+              "type": "aws_kms_key",
+              "name": "db_key",
+              "provider_name": "registry.terraform.io/hashicorp/aws",
+              "values": {
+                "id": "mrk-0db123key",
+                "description": "KMS key for RDS encryption",
+                "tags": { "Name": "db-kms-key" }
+              }
+            },
+            {
+              "address": "module.data.aws_db_subnet_group.main",
+              "type": "aws_db_subnet_group",
+              "name": "main",
+              "provider_name": "registry.terraform.io/hashicorp/aws",
+              "values": {
+                "id": "main-db-subnet-group",
+                "name": "main-db-subnet-group",
+                "subnet_ids": [
+                  "module.network.aws_subnet.private",
+                  "module.network.aws_subnet.public"
+                ],
+                "tags": { "Name": "main-db-subnet-group" }
+              }
+            },
+            {
+              "address": "module.data.aws_db_instance.postgres",
+              "type": "aws_db_instance",
+              "name": "postgres",
+              "provider_name": "registry.terraform.io/hashicorp/aws",
+              "values": {
+                "id": "main-postgres",
+                "engine": "postgres",
+                "engine_version": "16.1",
+                "instance_class": "db.r6g.large",
+                "allocated_storage": 100,
+                "vpc_security_group_ids": [
+                  "module.network.aws_security_group.db"
+                ],
+                "kms_key_id": "module.data.aws_kms_key.db_key",
+                "tags": { "Name": "main-postgres" }
+              }
+            }
+          ],
+          "child_modules": []
+        },
+        {
+          "address": "module.lb",
+          "resources": [
+            {
+              "address": "module.lb.aws_lb.main",
+              "type": "aws_lb",
+              "name": "main",
+              "provider_name": "registry.terraform.io/hashicorp/aws",
+              "values": {
+                "id": "arn:aws:elasticloadbalancing:us-east-1:123456789:loadbalancer/app/main-alb/abc123",
+                "name": "main-alb",
+                "internal": false,
+                "load_balancer_type": "application",
+                "security_groups": [
+                  "module.network.aws_security_group.web"
+                ],
+                "subnet_id": "module.network.aws_subnet.public",
+                "tags": { "Name": "main-alb" }
+              }
+            },
+            {
+              "address": "module.lb.aws_lb_target_group.web",
+              "type": "aws_lb_target_group",
+              "name": "web",
+              "provider_name": "registry.terraform.io/hashicorp/aws",
+              "values": {
+                "id": "arn:aws:elasticloadbalancing:us-east-1:123456789:targetgroup/web-tg/def456",
+                "name": "web-tg",
+                "port": 80,
+                "protocol": "HTTP",
+                "vpc_id": "module.network.aws_vpc.main",
+                "tags": { "Name": "web-target-group" }
+              }
+            },
+            {
+              "address": "module.lb.aws_lb_listener.http",
+              "type": "aws_lb_listener",
+              "name": "http",
+              "provider_name": "registry.terraform.io/hashicorp/aws",
+              "values": {
+                "id": "arn:aws:elasticloadbalancing:us-east-1:123456789:listener/app/main-alb/abc123/def456",
+                "port": 80,
+                "protocol": "HTTP",
+                "target_group_arn": "module.lb.aws_lb_target_group.web",
+                "tags": {}
+              }
+            }
+          ],
+          "child_modules": []
+        }
+      ]
+    }
+  }
+}
