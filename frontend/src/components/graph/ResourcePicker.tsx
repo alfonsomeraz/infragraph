@@ -12,14 +12,29 @@ interface ResourcePickerProps {
 export default function ResourcePicker({ onSelect, selectedId }: ResourcePickerProps) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<ResourceOut[]>([]);
+  const [allResources, setAllResources] = useState<ResourceOut[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout>>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Load all resources on mount for initial dropdown
+  useEffect(() => {
+    const loadAllResources = async () => {
+      try {
+        const data = await listResources({ limit: 100 });
+        setAllResources(data.resources);
+      } catch {
+        setAllResources([]);
+      }
+    };
+    loadAllResources();
+  }, []);
+
   useEffect(() => {
     if (!query.trim()) {
-      setResults([]);
+      // Show all resources when empty
+      setResults(allResources);
       return;
     }
 
@@ -27,7 +42,7 @@ export default function ResourcePicker({ onSelect, selectedId }: ResourcePickerP
     timerRef.current = setTimeout(async () => {
       setLoading(true);
       try {
-        const data = await listResources({ limit: 10 });
+        const data = await listResources({ limit: 50 });
         const filtered = data.resources.filter(
           (r) =>
             r.name?.toLowerCase().includes(query.toLowerCase()) ||
@@ -35,14 +50,13 @@ export default function ResourcePicker({ onSelect, selectedId }: ResourcePickerP
             r.resource_type.toLowerCase().includes(query.toLowerCase()),
         );
         setResults(filtered);
-        setOpen(true);
       } catch {
         setResults([]);
       } finally {
         setLoading(false);
       }
     }, 300);
-  }, [query]);
+  }, [query, allResources]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -60,7 +74,8 @@ export default function ResourcePicker({ onSelect, selectedId }: ResourcePickerP
         type="text"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        onFocus={() => results.length > 0 && setOpen(true)}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setTimeout(() => setOpen(false), 100)}
         placeholder="Search resources by name, ID, or type..."
         className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
       />
@@ -74,29 +89,41 @@ export default function ResourcePicker({ onSelect, selectedId }: ResourcePickerP
           Selected: <span className="font-mono">{selectedId.slice(0, 8)}...</span>
         </p>
       )}
-      {open && results.length > 0 && (
-        <ul className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md border border-gray-200 bg-white shadow-lg">
-          {results.map((r) => (
-            <li key={r.id}>
-              <button
-                type="button"
-                className="flex w-full flex-col gap-0.5 px-3 py-2 text-left hover:bg-gray-50"
-                onClick={() => {
-                  onSelect(r.id);
-                  setQuery(r.name || r.external_id);
-                  setOpen(false);
-                }}
-              >
-                <span className="text-sm font-medium text-gray-900">
-                  {r.name || r.external_id}
-                </span>
-                <span className="text-xs text-gray-500">
-                  {r.resource_type} &middot; {r.external_id}
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
+      {open && (
+        <div className="absolute z-10 mt-1 w-full max-h-60 overflow-auto rounded-md border border-gray-200 bg-white shadow-lg">
+          {results.length > 0 ? (
+            <ul>
+              {results.map((r) => (
+                <li key={r.id}>
+                  <button
+                    type="button"
+                    className="flex w-full flex-col gap-0.5 px-3 py-2 text-left hover:bg-gray-50"
+                    onClick={() => {
+                      onSelect(r.id);
+                      setQuery(r.name || r.external_id);
+                      setOpen(false);
+                    }}
+                  >
+                    <span className="text-sm font-medium text-gray-900">
+                      {r.name || r.external_id}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      {r.resource_type} &middot; {r.external_id}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="px-3 py-4 text-center text-sm text-gray-500">
+              {allResources.length === 0 ? (
+                <>No resources found. Upload a Terraform file first.</>
+              ) : (
+                <>No matches for "{query}"</>
+              )}
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
