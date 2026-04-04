@@ -9,23 +9,29 @@ from app.db.models import Base
 from app.db.session import get_session
 from app.main import app
 
-test_engine = create_async_engine(settings.database_url, echo=False)
-test_session_factory = async_sessionmaker(test_engine, class_=AsyncSession, expire_on_commit=False)
-
 
 @pytest.fixture
 async def db_session() -> AsyncGenerator[AsyncSession, None]:
-    async with test_engine.begin() as conn:
+    engine = create_async_engine(settings.database_url, echo=False)
+    session_factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+
+    async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-    async with test_session_factory() as session:
-        app.dependency_overrides[get_session] = lambda: session
+    async def _override() -> AsyncGenerator[AsyncSession, None]:
+        async with session_factory() as s:
+            yield s
+
+    app.dependency_overrides[get_session] = _override
+    async with session_factory() as session:
         yield session
 
-    async with test_engine.begin() as conn:
+    app.dependency_overrides.clear()
+
+    async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
 
-    app.dependency_overrides.clear()
+    await engine.dispose()
 
 
 @pytest.fixture

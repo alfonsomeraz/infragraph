@@ -1,4 +1,4 @@
-.PHONY: dev down test test-one lint format migrate migrate-new install
+.PHONY: dev down test test-one lint format migrate migrate-new install seed logs psql clean docker-build fe-install fe-dev fe-build fe-lint
 
 VENV   := backend/.venv
 BIN    := $(VENV)/bin
@@ -12,7 +12,7 @@ install:
 dev:
 	docker compose up -d
 	@echo "Postgres + API running — http://localhost:8000"
-	@echo "Logs: docker compose logs -f api"
+	@echo "Logs: make logs"
 
 # Stop everything
 down:
@@ -39,3 +39,37 @@ migrate:
 # Create a new migration: make migrate-new MSG="add foo table"
 migrate-new:
 	cd backend && .venv/bin/alembic revision --autogenerate -m "$(MSG)"
+
+# Seed the database with example Terraform files
+seed:
+	bash infra/scripts/seed.sh
+
+# Tail API logs
+logs:
+	docker compose logs -f api
+
+# Open psql shell in the postgres container
+psql:
+	docker compose exec postgres psql -U infragraph -d infragraph
+
+# Stop everything and remove volumes
+clean:
+	docker compose down -v
+
+# Build the API Docker image without starting
+docker-build:
+	docker compose build api
+
+# --- Frontend ---
+
+fe-install:
+	cd frontend && npm install
+
+fe-dev:
+	cd frontend && npm run dev
+
+fe-build:
+	cd frontend && npm run build
+
+fe-lint:
+	cd frontend && npm run lint

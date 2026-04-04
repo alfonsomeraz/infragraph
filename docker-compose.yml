@@ -3,10 +3,7 @@ services:
     image: postgres:16-alpine
     ports:
       - "5432:5432"
-    environment:
-      POSTGRES_USER: infragraph
-      POSTGRES_PASSWORD: infragraph
-      POSTGRES_DB: infragraph
+    env_file: .env
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -14,6 +11,7 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+    restart: unless-stopped
 
   api:
     build:
@@ -30,6 +28,32 @@ services:
     volumes:
       - ./backend:/app
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    restart: unless-stopped
+
+  migrate:
+    build:
+      context: .
+      dockerfile: infra/docker/api.Dockerfile
+    environment:
+      INFRAGRAPH_DATABASE_URL: postgresql+asyncpg://infragraph:infragraph@postgres:5432/infragraph
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: alembic upgrade head
+    profiles:
+      - tools
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://api:8000
+    depends_on:
+      - api
+    restart: unless-stopped
 
 volumes:
   pgdata:
