@@ -4,6 +4,7 @@
 
 [![CI](https://github.com/alfonsomeraz/infragraph/actions/workflows/ci.yml/badge.svg)](https://github.com/alfonsomeraz/infragraph/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Changelog](https://img.shields.io/badge/changelog-CHANGELOG.md-blue)](CHANGELOG.md)
 
 ![InfraGraph screenshot placeholder](docs/screenshot.png)
 
@@ -36,6 +37,8 @@ docker compose run --rm migrate
 ```
 
 Then open **http://localhost:3000** and upload one of the example files from `examples/`.
+
+> **Troubleshooting:** If the frontend shows "API 500" or a connection error, make sure all services are up with `docker compose ps` and run `docker compose run --rm migrate` if you haven't already.
 
 ---
 
@@ -77,6 +80,33 @@ make fe-dev
 make fe-build
 ```
 
+### CLI
+
+```bash
+# Install CLI into the backend venv
+make cli-install
+
+# Check available commands
+backend/.venv/bin/infragraph --help
+
+# With API running (make dev):
+backend/.venv/bin/infragraph ingest upload examples/terraform-plan.json
+backend/.venv/bin/infragraph resources list
+backend/.venv/bin/infragraph resources list --type aws_instance
+backend/.venv/bin/infragraph scan
+backend/.venv/bin/infragraph findings list --severity high
+backend/.venv/bin/infragraph blast-radius <resource_id> --depth 3
+backend/.venv/bin/infragraph graph graph <resource_id>
+```
+
+Override the API URL with an env var or flag:
+
+```bash
+INFRAGRAPH_API_URL=https://my-deployment.example.com backend/.venv/bin/infragraph resources list
+# or
+backend/.venv/bin/infragraph --api-url https://my-deployment.example.com resources list
+```
+
 ### Seed with example data
 
 ```bash
@@ -84,6 +114,8 @@ make seed
 ```
 
 This uploads the Terraform files in `examples/` and runs the findings scanner.
+
+To test the **findings engine** specifically, upload `examples/terraform-plan-findings.json` — it contains drift changes, unencrypted resources, an open security group, an orphaned CloudWatch log group, and a high-degree security group that will trigger all five detectors.
 
 ---
 
@@ -114,6 +146,11 @@ infragraph/
 │   │   ├── schemas/         # Pydantic request/response models
 │   │   └── services/        # Business logic (ingest, graph, findings)
 │   └── tests/
+├── cli/                     # Typer CLI (infragraph)
+│   └── infragraph_cli/
+│       ├── commands/        # ingest, resources, graph, findings
+│       ├── client.py        # httpx wrapper
+│       └── output.py        # Rich formatters
 ├── frontend/                # Next.js 16 + React Flow
 │   └── src/
 │       ├── app/             # Pages (dashboard, graph, blast-radius, findings, upload)
@@ -123,7 +160,7 @@ infragraph/
 │   ├── docker/              # Dockerfiles
 │   └── scripts/             # seed.sh
 ├── examples/                # Sample Terraform plan + state JSON files
-└── docs/
+└── docs/                    # Architecture and deployment guides
 ```
 
 ---
@@ -141,6 +178,13 @@ infragraph/
 | CI | GitHub Actions |
 
 ---
+
+## Documentation
+
+- [Architecture overview](docs/architecture.md) — data model, services, adapters, data flow
+- [Deployment guide](docs/deployment.md) — Docker Compose, TLS, production considerations
+- [Changelog](CHANGELOG.md) — version history
+- [Security policy](SECURITY.md) — vulnerability reporting
 
 ## Contributing
 

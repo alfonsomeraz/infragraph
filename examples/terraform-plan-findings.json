@@ -1,0 +1,303 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.7.0",
+  "resource_changes": [
+    {
+      "address": "aws_vpc.main",
+      "type": "aws_vpc",
+      "name": "main",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["no-op"],
+        "before": {
+          "cidr_block": "10.0.0.0/16",
+          "enable_dns_support": true,
+          "tags": { "Name": "main-vpc", "Environment": "staging" }
+        },
+        "after": {
+          "cidr_block": "10.0.0.0/16",
+          "enable_dns_support": true,
+          "tags": { "Name": "main-vpc", "Environment": "staging" }
+        }
+      }
+    },
+    {
+      "address": "aws_subnet.private",
+      "type": "aws_subnet",
+      "name": "private",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["no-op"],
+        "before": {
+          "cidr_block": "10.0.1.0/24",
+          "vpc_id": "aws_vpc.main",
+          "availability_zone": "us-east-1a",
+          "tags": { "Name": "private-subnet" }
+        },
+        "after": {
+          "cidr_block": "10.0.1.0/24",
+          "vpc_id": "aws_vpc.main",
+          "availability_zone": "us-east-1a",
+          "tags": { "Name": "private-subnet" }
+        }
+      }
+    },
+    {
+      "address": "aws_security_group.open",
+      "type": "aws_security_group",
+      "name": "open",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["no-op"],
+        "before": {
+          "name": "open-sg",
+          "description": "Overly permissive SG — should trigger exposure finding",
+          "vpc_id": "aws_vpc.main",
+          "ingress": [
+            {
+              "from_port": 0,
+              "to_port": 65535,
+              "protocol": "-1",
+              "cidr_blocks": ["0.0.0.0/0"]
+            }
+          ],
+          "tags": { "Name": "open-sg" }
+        },
+        "after": {
+          "name": "open-sg",
+          "description": "Overly permissive SG — should trigger exposure finding",
+          "vpc_id": "aws_vpc.main",
+          "ingress": [
+            {
+              "from_port": 0,
+              "to_port": 65535,
+              "protocol": "-1",
+              "cidr_blocks": ["0.0.0.0/0"]
+            }
+          ],
+          "tags": { "Name": "open-sg" }
+        }
+      }
+    },
+    {
+      "address": "aws_s3_bucket.unencrypted",
+      "type": "aws_s3_bucket",
+      "name": "unencrypted",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["no-op"],
+        "before": {
+          "bucket": "my-unencrypted-bucket",
+          "encrypted": false,
+          "tags": { "Name": "unencrypted-bucket" }
+        },
+        "after": {
+          "bucket": "my-unencrypted-bucket",
+          "encrypted": false,
+          "tags": { "Name": "unencrypted-bucket" }
+        }
+      }
+    },
+    {
+      "address": "aws_instance.web",
+      "type": "aws_instance",
+      "name": "web",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["update"],
+        "before": {
+          "instance_type": "t3.small",
+          "subnet_id": "aws_subnet.private",
+          "security_groups": ["aws_security_group.open"],
+          "tags": { "Name": "web-server" }
+        },
+        "after": {
+          "instance_type": "t3.medium",
+          "subnet_id": "aws_subnet.private",
+          "security_groups": ["aws_security_group.open"],
+          "tags": { "Name": "web-server" }
+        }
+      }
+    },
+    {
+      "address": "aws_instance.worker",
+      "type": "aws_instance",
+      "name": "worker",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["update"],
+        "before": {
+          "instance_type": "t3.micro",
+          "subnet_id": "aws_subnet.private",
+          "security_groups": ["aws_security_group.open"],
+          "tags": { "Name": "worker-server" }
+        },
+        "after": {
+          "instance_type": "t3.small",
+          "subnet_id": "aws_subnet.private",
+          "security_groups": ["aws_security_group.open"],
+          "tags": { "Name": "worker-server" }
+        }
+      }
+    },
+    {
+      "address": "aws_instance.db_replica",
+      "type": "aws_instance",
+      "name": "db_replica",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "instance_type": "t3.medium",
+          "subnet_id": "aws_subnet.private",
+          "security_groups": ["aws_security_group.open"],
+          "tags": { "Name": "db-replica" }
+        }
+      }
+    },
+    {
+      "address": "aws_elb.main",
+      "type": "aws_elb",
+      "name": "main",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["no-op"],
+        "before": {
+          "name": "main-elb",
+          "instance_id": "aws_instance.web",
+          "tags": { "Name": "main-elb" }
+        },
+        "after": {
+          "name": "main-elb",
+          "instance_id": "aws_instance.web",
+          "tags": { "Name": "main-elb" }
+        }
+      }
+    },
+    {
+      "address": "aws_rds_instance.primary",
+      "type": "aws_rds_instance",
+      "name": "primary",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["no-op"],
+        "before": {
+          "identifier": "primary-db",
+          "instance_class": "db.t3.medium",
+          "subnet_id": "aws_subnet.private",
+          "security_groups": ["aws_security_group.open"],
+          "encrypted": false,
+          "tags": { "Name": "primary-db" }
+        },
+        "after": {
+          "identifier": "primary-db",
+          "instance_class": "db.t3.medium",
+          "subnet_id": "aws_subnet.private",
+          "security_groups": ["aws_security_group.open"],
+          "encrypted": false,
+          "tags": { "Name": "primary-db" }
+        }
+      }
+    },
+    {
+      "address": "aws_ebs_volume.data",
+      "type": "aws_ebs_volume",
+      "name": "data",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["no-op"],
+        "before": {
+          "size": 100,
+          "encrypted": false,
+          "availability_zone": "us-east-1a",
+          "tags": { "Name": "data-volume" }
+        },
+        "after": {
+          "size": 100,
+          "encrypted": false,
+          "availability_zone": "us-east-1a",
+          "tags": { "Name": "data-volume" }
+        }
+      }
+    },
+    {
+      "address": "aws_iam_role.lambda_exec",
+      "type": "aws_iam_role",
+      "name": "lambda_exec",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["no-op"],
+        "before": {
+          "name": "lambda-exec-role",
+          "assume_role_policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"},\"Action\":\"sts:AssumeRole\"}]}",
+          "tags": { "Name": "lambda-exec-role" }
+        },
+        "after": {
+          "name": "lambda-exec-role",
+          "assume_role_policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"},\"Action\":\"sts:AssumeRole\"}]}",
+          "tags": { "Name": "lambda-exec-role" }
+        }
+      }
+    },
+    {
+      "address": "aws_lambda_function.processor",
+      "type": "aws_lambda_function",
+      "name": "processor",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["no-op"],
+        "before": {
+          "function_name": "data-processor",
+          "runtime": "python3.11",
+          "role_arn": "aws_iam_role.lambda_exec",
+          "tags": { "Name": "data-processor" }
+        },
+        "after": {
+          "function_name": "data-processor",
+          "runtime": "python3.11",
+          "role_arn": "aws_iam_role.lambda_exec",
+          "tags": { "Name": "data-processor" }
+        }
+      }
+    },
+    {
+      "address": "aws_cloudwatch_log_group.orphan_logs",
+      "type": "aws_cloudwatch_log_group",
+      "name": "orphan_logs",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["no-op"],
+        "before": {
+          "name": "/orphan/logs",
+          "retention_in_days": 30,
+          "tags": { "Name": "orphan-logs" }
+        },
+        "after": {
+          "name": "/orphan/logs",
+          "retention_in_days": 30,
+          "tags": { "Name": "orphan-logs" }
+        }
+      }
+    }
+  ],
+  "planned_values": {
+    "root_module": {
+      "resources": [
+        { "address": "aws_vpc.main",                  "type": "aws_vpc",                  "name": "main",         "provider_name": "registry.terraform.io/hashicorp/aws", "values": { "cidr_block": "10.0.0.0/16", "enable_dns_support": true, "tags": { "Name": "main-vpc" } } },
+        { "address": "aws_subnet.private",             "type": "aws_subnet",               "name": "private",      "provider_name": "registry.terraform.io/hashicorp/aws", "values": { "cidr_block": "10.0.1.0/24", "vpc_id": "aws_vpc.main" } },
+        { "address": "aws_security_group.open",        "type": "aws_security_group",       "name": "open",         "provider_name": "registry.terraform.io/hashicorp/aws", "values": { "name": "open-sg", "vpc_id": "aws_vpc.main" } },
+        { "address": "aws_s3_bucket.unencrypted",      "type": "aws_s3_bucket",            "name": "unencrypted",  "provider_name": "registry.terraform.io/hashicorp/aws", "values": { "bucket": "my-unencrypted-bucket", "encrypted": false } },
+        { "address": "aws_instance.web",               "type": "aws_instance",             "name": "web",          "provider_name": "registry.terraform.io/hashicorp/aws", "values": { "instance_type": "t3.medium", "subnet_id": "aws_subnet.private", "security_groups": ["aws_security_group.open"] } },
+        { "address": "aws_instance.worker",            "type": "aws_instance",             "name": "worker",       "provider_name": "registry.terraform.io/hashicorp/aws", "values": { "instance_type": "t3.small",  "subnet_id": "aws_subnet.private", "security_groups": ["aws_security_group.open"] } },
+        { "address": "aws_instance.db_replica",        "type": "aws_instance",             "name": "db_replica",   "provider_name": "registry.terraform.io/hashicorp/aws", "values": { "instance_type": "t3.medium", "subnet_id": "aws_subnet.private", "security_groups": ["aws_security_group.open"] } },
+        { "address": "aws_elb.main",                   "type": "aws_elb",                  "name": "main",         "provider_name": "registry.terraform.io/hashicorp/aws", "values": { "name": "main-elb", "instance_id": "aws_instance.web" } },
+        { "address": "aws_rds_instance.primary",       "type": "aws_rds_instance",         "name": "primary",      "provider_name": "registry.terraform.io/hashicorp/aws", "values": { "identifier": "primary-db", "subnet_id": "aws_subnet.private", "security_groups": ["aws_security_group.open"], "encrypted": false } },
+        { "address": "aws_ebs_volume.data",            "type": "aws_ebs_volume",           "name": "data",         "provider_name": "registry.terraform.io/hashicorp/aws", "values": { "size": 100, "encrypted": false } },
+        { "address": "aws_iam_role.lambda_exec",       "type": "aws_iam_role",             "name": "lambda_exec",  "provider_name": "registry.terraform.io/hashicorp/aws", "values": { "name": "lambda-exec-role" } },
+        { "address": "aws_lambda_function.processor",  "type": "aws_lambda_function",      "name": "processor",    "provider_name": "registry.terraform.io/hashicorp/aws", "values": { "function_name": "data-processor", "role_arn": "aws_iam_role.lambda_exec" } },
+        { "address": "aws_cloudwatch_log_group.orphan_logs", "type": "aws_cloudwatch_log_group", "name": "orphan_logs", "provider_name": "registry.terraform.io/hashicorp/aws", "values": { "name": "/orphan/logs", "retention_in_days": 30 } }
+      ]
+    }
+  }
+}

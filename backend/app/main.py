@@ -1,7 +1,13 @@
-from fastapi import FastAPI
+import logging
+import traceback
+
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 
 from app.config import settings
 from app.routes import findings, graph, ingest, resources
+
+logger = logging.getLogger("infragraph")
 
 app = FastAPI(
     title="InfraGraph",
@@ -13,6 +19,18 @@ app.include_router(ingest.router, prefix=settings.api_prefix)
 app.include_router(resources.router, prefix=settings.api_prefix)
 app.include_router(graph.router, prefix=settings.api_prefix)
 app.include_router(findings.router, prefix=settings.api_prefix)
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    logger.error(
+        "Unhandled exception on %s %s\n%s",
+        request.method,
+        request.url,
+        traceback.format_exc(),
+    )
+    detail = str(exc) if settings.debug else "Internal server error"
+    return JSONResponse(status_code=500, content={"detail": detail})
 
 
 @app.get("/health")

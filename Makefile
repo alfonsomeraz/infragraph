@@ -1,4 +1,4 @@
-.PHONY: dev down test test-one lint format migrate migrate-new install seed logs psql clean docker-build fe-install fe-dev fe-build fe-lint
+.PHONY: dev down test test-one lint format migrate migrate-new install seed logs psql clean docker-build fe-install fe-dev fe-build fe-lint cli-install cli-run
 
 VENV   := backend/.venv
 BIN    := $(VENV)/bin
@@ -8,10 +8,14 @@ install:
 	test -d $(VENV) || python -m venv $(VENV)
 	cd backend && .venv/bin/pip install -e ".[dev]"
 
-# Start Postgres + API (detached) with hot-reload
+# Start Postgres + API (detached) with hot-reload, run migrations first
 dev:
+	docker compose up -d postgres
+	@echo "Waiting for Postgres..."
+	@until docker compose exec postgres pg_isready -U infragraph -q 2>/dev/null; do sleep 1; done
+	docker compose run --rm migrate
 	docker compose up -d
-	@echo "Postgres + API running — http://localhost:8000"
+	@echo "Postgres + API + Frontend running — http://localhost:3000 (API: http://localhost:8000)"
 	@echo "Logs: make logs"
 
 # Stop everything
@@ -59,6 +63,14 @@ clean:
 # Build the API Docker image without starting
 docker-build:
 	docker compose build api
+
+# --- CLI ---
+
+cli-install:
+	cd cli && ../backend/.venv/bin/pip install -e .
+
+cli-run:
+	backend/.venv/bin/infragraph
 
 # --- Frontend ---
 

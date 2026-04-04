@@ -22,6 +22,7 @@ Thank you for your interest in contributing! This document covers how to get you
    ```bash
    make install      # backend venv + deps
    make fe-install   # frontend node_modules
+   make cli-install  # CLI into backend venv
    docker compose up -d postgres
    make migrate
    ```
@@ -49,6 +50,14 @@ Thank you for your interest in contributing! This document covers how to get you
 - Pages go in `src/app/`, shared components in `src/components/`
 - Run `make fe-lint` before committing
 
+### CLI changes
+
+- Code lives in `cli/infragraph_cli/`
+- Commands are in `commands/` — each file is a `typer.Typer` sub-app
+- Rich output helpers go in `output.py`
+- Re-install after changes: `make cli-install`
+- Test manually: `backend/.venv/bin/infragraph --help`
+
 ### Database migrations
 
 If your change adds or modifies a DB model:
@@ -71,6 +80,10 @@ make migrate
 PRs should be focused. One feature or fix per PR.
 
 ---
+
+## Security vulnerabilities
+
+Please **do not** open a public issue for security vulnerabilities. See [SECURITY.md](SECURITY.md) for the responsible disclosure process.
 
 ## Reporting bugs
 

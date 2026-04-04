@@ -12,6 +12,10 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
+# BACKEND_URL is the URL the Next.js server uses to proxy /api/* requests.
+# Defaults to the Docker Compose service name so it works out-of-the-box.
+ARG BACKEND_URL=http://api:8000
+ENV BACKEND_URL=$BACKEND_URL
 RUN npm run build
 
 # --- Runner ---

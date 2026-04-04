@@ -1,36 +1,80 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# InfraGraph — Frontend
 
-## Getting Started
+Next.js 16 web application for InfraGraph. Provides an interactive graph canvas, resource browser, blast radius analysis, and findings dashboard.
 
-First, run the development server:
+## Stack
+
+- **Next.js 16** (App Router, TypeScript strict)
+- **React Flow v12** (`@xyflow/react`) — graph visualization
+- **dagre** — automatic graph layout
+- **Tailwind CSS v4** — styling
+
+## Pages
+
+| Route | Description |
+|-------|-------------|
+| `/` | Dashboard — summary stats + recent findings |
+| `/upload` | Drag-and-drop Terraform JSON upload |
+| `/resources` | Filterable, paginated resource browser |
+| `/graph` | Interactive dependency graph for any resource |
+| `/blast-radius` | BFS impact visualization with configurable depth |
+| `/findings` | Findings list filtered by type and severity |
+
+## Development
+
+Requires the backend API running on `:8000` (see root README).
 
 ```bash
+# Install deps
+npm install
+
+# Start dev server on :3000
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# Production build
+npm run build
+
+# Lint
+npm run lint
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Or use the root Makefile targets:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+make fe-install
+make fe-dev
+make fe-build
+make fe-lint
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## API integration
 
-## Learn More
+All API calls go through Next.js rewrites (`next.config.ts`):
 
-To learn more about Next.js, take a look at the following resources:
+```
+/api/* → http://api:8000    (inside Docker)
+/api/* → http://localhost:8000  (local dev)
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+This avoids CORS issues in development. The fetch wrapper lives in `src/lib/api.ts`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Project layout
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+src/
+├── app/                  # Pages (Next.js App Router)
+│   ├── page.tsx          # Dashboard
+│   ├── upload/
+│   ├── resources/
+│   ├── graph/
+│   ├── blast-radius/
+│   └── findings/
+├── components/
+│   ├── AppShell.tsx      # Layout + sidebar navigation
+│   ├── graph/            # React Flow canvas, nodes, edges
+│   └── ui/               # Badge, Spinner, EmptyState, Pagination, DropZone, ResourcePicker
+└── lib/
+    ├── api.ts            # Typed fetch wrappers for every API endpoint
+    ├── types.ts          # TypeScript types matching backend Pydantic schemas
+    └── constants.ts      # Severity colors, labels, default limits
+```

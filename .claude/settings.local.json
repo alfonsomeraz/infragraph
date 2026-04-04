@@ -22,7 +22,21 @@
       "Bash(make lint:*)",
       "Bash(.venv/bin/ruff check:*)",
       "Bash(make test-one:*)",
-      "Bash(make test:*)"
+      "Bash(make test:*)",
+      "Bash(.venv/bin/python:*)",
+      "Bash(wc:*)",
+      "Bash(echo:*)",
+      "Bash(npx create-next-app@latest:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npm run build:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(make:*)",
+      "Bash(backend/.venv/bin/infragraph:*)",
+      "Bash(grep:*)",
+      "Bash(ls:*)"
     ]
   }
 }
