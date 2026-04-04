@@ -1,0 +1,44 @@
+name: Version Check
+
+on:
+  pull_request:
+    paths:
+      - VERSION
+      - backend/pyproject.toml
+      - cli/pyproject.toml
+      - frontend/package.json
+      - CHANGELOG.md
+
+jobs:
+  check-versions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check version consistency
+        run: |
+          VERSION=$(cat VERSION)
+          BACKEND_VERSION=$(grep '^version' backend/pyproject.toml | head -1 | cut -d'"' -f2)
+          CLI_VERSION=$(grep '^version' cli/pyproject.toml | head -1 | cut -d'"' -f2)
+          FRONTEND_VERSION=$(grep '"version"' frontend/package.json | head -1 | cut -d'"' -f4)
+
+          echo "VERSION file: $VERSION"
+          echo "Backend: $BACKEND_VERSION"
+          echo "CLI: $CLI_VERSION"
+          echo "Frontend: $FRONTEND_VERSION"
+
+          if [ "$VERSION" != "$BACKEND_VERSION" ] || [ "$VERSION" != "$CLI_VERSION" ] || [ "$VERSION" != "$FRONTEND_VERSION" ]; then
+            echo "❌ Version mismatch! All versions must match VERSION file."
+            exit 1
+          fi
+
+          echo "✓ All versions match: $VERSION"
+
+      - name: Check CHANGELOG updated
+        run: |
+          VERSION=$(cat VERSION)
+          if ! grep -q "^## \[$VERSION\]" CHANGELOG.md; then
+            echo "❌ CHANGELOG.md missing entry for v$VERSION"
+            exit 1
+          fi
+          echo "✓ CHANGELOG.md updated for v$VERSION"

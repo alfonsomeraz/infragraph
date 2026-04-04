@@ -186,6 +186,33 @@ infragraph/
 - [Changelog](CHANGELOG.md) — version history
 - [Security policy](SECURITY.md) — vulnerability reporting
 
+## Versioning & Releases
+
+InfraGraph uses **semantic versioning** (MAJOR.MINOR.PATCH). All version numbers are synchronized across:
+- `VERSION` file
+- `backend/pyproject.toml`
+- `cli/pyproject.toml`
+- `frontend/package.json`
+
+### Bumping the version
+
+```bash
+bash infra/scripts/bump-version.sh 0.2.0
+# Updates all version files
+```
+
+Then:
+
+1. Update `CHANGELOG.md` with the new version and changes
+2. Commit: `git add -A && git commit -m 'Bump version to 0.2.0'`
+3. Tag: `git tag -a v0.2.0 -m 'Release v0.2.0'`
+4. Push: `git push origin main && git push origin v0.2.0`
+
+On tag push, GitHub Actions will:
+- Run full CI (lint, migrate, tests, frontend build)
+- Build and push Docker images to GHCR as `ghcr.io/alfonsomeraz/infragraph/api:0.2.0` and `:latest`
+- Create a GitHub Release with CHANGELOG notes
+
 ## Contributing
 
 Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
